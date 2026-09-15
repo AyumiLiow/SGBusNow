@@ -1,4 +1,4 @@
-reflection & assessment 
+## reflection & assessment 
 
 1. re-doing the problem set from our problem set 1, as existing web page (meeting time scheduling app, for university students) requires personal calendar data, which is not accessible.
    as such, i started from scratch, and re-directed my focus on building a web app where users could check live bus arrival time in singapore. users being singapore bus commuters,
