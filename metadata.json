@@ -1,0 +1,6 @@
+{
+  "name": "BusNow SG",
+  "description": "Live Singapore bus arrival timings, service occupancies, and stop selector",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
