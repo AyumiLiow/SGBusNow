@@ -1,6 +1,6 @@
 
 # prompts.md - [SGBusNow]
-**Student:** Ayumi Liow · **Course:** MGMT 6110 · **Problem Set 1**
+**Student:** Ayumi Liow · **Course:** MGMT 6110 · **Problem Set 2**
 **User sentence:** A Singapore commuter using public buses opens this screen to check when the next buses will arrive at one selected bus stop, and knows it worked when screen shows accurate live bus arrival timings.
 **Live link:** https://sgbusnow.vercel.app/
 
