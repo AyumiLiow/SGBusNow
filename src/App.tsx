@@ -454,8 +454,38 @@ export default function App() {
         identifier="home"
       />
 
-      {/* Required Attribution Footer for Singapore Open Data Licence */}
-      <footer id="licence-attribution-footer" className="w-full max-w-md mt-4 mb-2 text-center text-[11px] text-slate-500 leading-relaxed px-4">
+      {/* Required Attribution Footer for Singapore Open Data Licence and Privacy Notice */}
+      <footer id="licence-attribution-footer" className="w-full max-w-md mt-4 mb-2 text-center text-[11px] text-slate-500 leading-relaxed px-4 space-y-2">
+        <p id="privacy-notice">
+          This page uses Microsoft Clarity and Disqus, which use cookies to record how visitors use the site and to host comments. By using this page you agree that we and Microsoft may collect and use this data. See the{' '}
+          <a
+            href="https://www.microsoft.com/privacy/privacystatement"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-800 font-medium"
+          >
+            Microsoft Privacy Statement
+          </a>
+          , the{' '}
+          <a
+            href="https://disqus.com/privacy-policy/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-800 font-medium"
+          >
+            Disqus privacy policy
+          </a>{' '}
+          and the{' '}
+          <a
+            href="https://disqus.com/data-sharing-settings/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-800 font-medium"
+          >
+            Disqus data sharing settings
+          </a>
+          .
+        </p>
         <p>
           Contains information from{' '}
           <a
