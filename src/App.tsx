@@ -447,7 +447,12 @@ export default function App() {
       </main>
 
       {/* Disqus Feedback & Comment Section */}
-      <DisqusComments viewMode={viewMode} />
+      <DisqusComments
+        viewMode={viewMode}
+        shortname="sgbusnow"
+        url="https://sgbusnow.vercel.app/"
+        identifier="home"
+      />
 
       {/* Required Attribution Footer for Singapore Open Data Licence */}
       <footer id="licence-attribution-footer" className="w-full max-w-md mt-4 mb-2 text-center text-[11px] text-slate-500 leading-relaxed px-4">

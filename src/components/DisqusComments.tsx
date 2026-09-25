@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
 
-// Default Configuration: Disqus shortname and canonical URL
-// (Matches live deployment https://sgbusnow.vercel.app)
+// Configuration: Disqus shortname and live canonical URL
 const DEFAULT_SHORTNAME = 'sgbusnow';
-const DEFAULT_PAGE_URL = 'https://sgbusnow.vercel.app';
+const DEFAULT_PAGE_URL = 'https://sgbusnow.vercel.app/';
 const DEFAULT_PAGE_IDENTIFIER = 'home';
 
 declare global {
@@ -29,25 +28,40 @@ export const DisqusComments: React.FC<DisqusCommentsProps> = ({
   identifier = DEFAULT_PAGE_IDENTIFIER,
 }) => {
   useEffect(() => {
-    // 1. Configure Disqus page parameters
+    // Ensure clean HTTPS URL without query string
+    const cleanUrl = url.split('?')[0];
+
+    // Configure Disqus parameters defensively
     window.disqus_config = function (this: any) {
-      this.page.url = url;
-      this.page.identifier = identifier;
+      const config = this || {};
+      if (!config.page) {
+        config.page = {};
+      }
+      config.page.url = cleanUrl;
+      config.page.identifier = identifier;
     };
 
-    // 2. If Disqus is already loaded, reset it without re-injecting the script tag
-    if (window.DISQUS) {
-      window.DISQUS.reset({
-        reload: true,
-        config: function (this: any) {
-          this.page.url = url;
-          this.page.identifier = identifier;
-        },
-      });
+    // If script is already initialized on the page, safely reset Disqus
+    if (window.DISQUS && typeof window.DISQUS.reset === 'function') {
+      try {
+        window.DISQUS.reset({
+          reload: true,
+          config: function (this: any) {
+            const config = this || {};
+            if (!config.page) {
+              config.page = {};
+            }
+            config.page.url = cleanUrl;
+            config.page.identifier = identifier;
+          },
+        });
+      } catch (err) {
+        // Suppress transient reset errors when Disqus is initializing
+      }
       return;
     }
 
-    // 3. Load the Disqus Universal Code script tag only once
+    // Load the Disqus Universal Code script tag only once
     const scriptId = 'disqus-universal-code';
     if (!document.getElementById(scriptId)) {
       const script = document.createElement('script');
@@ -55,6 +69,10 @@ export const DisqusComments: React.FC<DisqusCommentsProps> = ({
       script.src = `https://${shortname}.disqus.com/embed.js`;
       script.setAttribute('data-timestamp', Date.now().toString());
       script.async = true;
+      script.crossOrigin = 'anonymous';
+      script.onerror = () => {
+        // Prevent uncaught error when network blocks or fails Disqus embed
+      };
       (document.head || document.body).appendChild(script);
     }
   }, [shortname, url, identifier]);
@@ -69,7 +87,7 @@ export const DisqusComments: React.FC<DisqusCommentsProps> = ({
     >
       {/* Short line inviting visitor feedback */}
       <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-4 text-center">
-        Let us know what worked for you and what did not!
+        Tell us what worked for you and what did not!
       </p>
 
       {/* Disqus thread container */}

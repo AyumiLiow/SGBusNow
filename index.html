@@ -12,6 +12,34 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      // Suppress cross-origin third-party script errors (e.g. Disqus tracker/widget blockers)
+      window.addEventListener('error', function (event) {
+        if (
+          event.message === 'Script error.' ||
+          !event.filename ||
+          (typeof event.filename === 'string' &&
+            (event.filename.includes('disqus') ||
+              event.filename.includes('disquscdn')))
+        ) {
+          event.preventDefault();
+          if (event.stopImmediatePropagation) {
+            event.stopImmediatePropagation();
+          }
+          return true;
+        }
+      }, true);
+
+      window.addEventListener('unhandledrejection', function (event) {
+        if (
+          !event.reason ||
+          (typeof event.reason === 'string' &&
+            event.reason.toLowerCase().includes('script error'))
+        ) {
+          event.preventDefault();
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
