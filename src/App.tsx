@@ -6,6 +6,7 @@ import { ActiveStopBanner } from './components/ActiveStopBanner';
 import { BusCard } from './components/BusCard';
 import { StopSelectorModal } from './components/StopSelectorModal';
 import { ServiceDetailModal } from './components/ServiceDetailModal';
+import { DisqusComments } from './components/DisqusComments';
 import {
   Smartphone,
   Maximize2,
@@ -444,6 +445,9 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      {/* Disqus Feedback & Comment Section */}
+      <DisqusComments viewMode={viewMode} />
 
       {/* Required Attribution Footer for Singapore Open Data Licence */}
       <footer id="licence-attribution-footer" className="w-full max-w-md mt-4 mb-2 text-center text-[11px] text-slate-500 leading-relaxed px-4">
