@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 
 // Configuration: Disqus shortname and live canonical URL
-const DEFAULT_SHORTNAME = 'sgbusnow';
+const DEFAULT_SHORTNAME = 'sgbusnow.disqus.com';
 const DEFAULT_PAGE_URL = 'https://sgbusnow.vercel.app/';
 const DEFAULT_PAGE_IDENTIFIER = 'home';
 
@@ -30,6 +30,13 @@ export const DisqusComments: React.FC<DisqusCommentsProps> = ({
   useEffect(() => {
     // Ensure clean HTTPS URL without query string
     const cleanUrl = url.split('?')[0];
+
+    // Normalize shortname in case user passes "sgbusnow.disqus.com" or "sgbusnow"
+    const normalizedShortname = shortname
+      .replace(/^https?:\/\//i, '')
+      .replace(/\.disqus\.com\/?$/i, '')
+      .replace(/\/+$/, '')
+      .trim();
 
     // Configure Disqus parameters defensively
     window.disqus_config = function (this: any) {
@@ -66,7 +73,7 @@ export const DisqusComments: React.FC<DisqusCommentsProps> = ({
     if (!document.getElementById(scriptId)) {
       const script = document.createElement('script');
       script.id = scriptId;
-      script.src = `https://${shortname}.disqus.com/embed.js`;
+      script.src = `https://${normalizedShortname}.disqus.com/embed.js`;
       script.setAttribute('data-timestamp', Date.now().toString());
       script.async = true;
       script.crossOrigin = 'anonymous';

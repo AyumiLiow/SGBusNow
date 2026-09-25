@@ -449,7 +449,7 @@ export default function App() {
       {/* Disqus Feedback & Comment Section */}
       <DisqusComments
         viewMode={viewMode}
-        shortname="sgbusnow"
+        shortname="sgbusnow.disqus.com"
         url="https://sgbusnow.vercel.app/"
         identifier="home"
       />
