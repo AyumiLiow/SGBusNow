@@ -13,11 +13,17 @@ import {
   Search,
   Filter,
   Info,
-  CheckCircle2
+  CheckCircle2,
+  AlertTriangle,
+  WifiOff,
+  Clock,
+  RefreshCw
 } from 'lucide-react';
 
+export type FetchStatus = 'loading' | 'empty' | 'refused' | 'unreachable' | 'success';
+
 export default function App() {
-  // Current active bus stop (default to Bras Basah Green from the screenshot)
+  // Current active bus stop (default to Bras Basah Green 04121 from the screenshot)
   const [stopsData, setStopsData] = useState<BusStop[]>(BUS_STOPS_DATA);
   const [currentStopCode, setCurrentStopCode] = useState<string>('04121');
   const [selectedService, setSelectedService] = useState<BusService | null>(null);
@@ -29,6 +35,12 @@ export default function App() {
   const [favoriteCodes, setFavoriteCodes] = useState<string[]>(['04121', '08057']);
   const [favoriteServices, setFavoriteServices] = useState<string[]>(['7', '106']);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Live fetch status state
+  const [fetchStatus, setFetchStatus] = useState<FetchStatus>('loading');
+  const [statusSentence, setStatusSentence] = useState<string>(
+    'Fetching live bus arrival timings from Singapore Land Transport Authority...'
+  );
 
   // Timestamp formatted as "06:50:08 PM" matching screenshot
   const [lastUpdated, setLastUpdated] = useState<string>('06:50:08 PM');
@@ -53,6 +65,109 @@ export default function App() {
   const currentStop = useMemo(() => {
     return stopsData.find((s) => s.code === currentStopCode) || stopsData[0];
   }, [stopsData, currentStopCode]);
+
+  // Live arrival fetcher from serverless function
+  const fetchLiveArrivals = useCallback(async (stopCode: string) => {
+    setFetchStatus('loading');
+    setStatusSentence('Fetching live bus arrival timings from Singapore Land Transport Authority...');
+
+    try {
+      const response = await fetch(`/api/bus?BusStopCode=${encodeURIComponent(stopCode)}`);
+
+      if (response.status === 502 || response.status === 504) {
+        setFetchStatus('unreachable');
+        setStatusSentence('The upstream transport service is unreachable; please check your network connection.');
+        return;
+      }
+
+      if (!response.ok) {
+        // Upstream refused (e.g. 401, 403, 503 missing credential)
+        setFetchStatus('refused');
+        setStatusSentence('The upstream transport service refused the request; please verify your API credentials.');
+        return;
+      }
+
+      const data = await response.json();
+      const rawServices = data.Services || data.services || [];
+
+      if (rawServices.length === 0) {
+        setFetchStatus('empty');
+        setStatusSentence('No buses are currently running for this stop.');
+        setStopsData((prevStops) =>
+          prevStops.map((stop) =>
+            stop.code === stopCode ? { ...stop, services: [] } : stop
+          )
+        );
+      } else {
+        setFetchStatus('success');
+        setStatusSentence('');
+        // Merge incoming live services with existing bus stop definitions
+        setStopsData((prevStops) =>
+          prevStops.map((stop) => {
+            if (stop.code === stopCode) {
+              return {
+                ...stop,
+                services: rawServices.map((liveSrv: any) => {
+                  const srvNo = liveSrv.ServiceNo || liveSrv.serviceNo;
+                  const existing = stop.services.find((x) => x.serviceNo === srvNo);
+
+                  const parseBusTiming = (bus: any) => {
+                    if (!bus) return undefined;
+                    const mins = typeof bus.minutes === 'number' ? bus.minutes : 0;
+                    const secs = typeof bus.seconds === 'number' ? bus.seconds : mins * 60;
+                    return {
+                      seconds: Math.max(0, secs),
+                      load: (bus.load === 'LSD' ? 'LSD' : bus.load === 'SDA' ? 'SDA' : 'SEA') as any,
+                      type: (bus.type === 'DD' ? 'DD' : bus.type === 'BD' ? 'BD' : 'SD') as any,
+                      wheelchair: true,
+                    };
+                  };
+
+                  const nextBus = parseBusTiming(liveSrv.nextBus) || {
+                    seconds: 0,
+                    load: 'SEA',
+                    type: 'SD',
+                    wheelchair: true,
+                  };
+
+                  const nextBus2 = parseBusTiming(liveSrv.nextBus2);
+
+                  return {
+                    serviceNo: srvNo,
+                    operator: liveSrv.operator || existing?.operator || 'SBST',
+                    destination: existing?.destination || 'Loop / Terminal',
+                    nextBus,
+                    ...(nextBus2 ? { nextBus2 } : {}),
+                    ...(liveSrv.nextBus3 ? { nextBus3: parseBusTiming(liveSrv.nextBus3) } : {}),
+                    firstBusTime: existing?.firstBusTime || '05:30 AM',
+                    lastBusTime: existing?.lastBusTime || '11:45 PM',
+                    frequencyMinutes: existing?.frequencyMinutes || '8-12 mins',
+                  };
+                }),
+              };
+            }
+            return stop;
+          })
+        );
+      }
+      setLastUpdated(getFormattedTime());
+    } catch (err) {
+      // Network failure reaching api or upstream
+      setFetchStatus('unreachable');
+      setStatusSentence('The upstream transport service is unreachable; please check your network connection.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [getFormattedTime]);
+
+  // Fetch live arrivals whenever stopCode changes and automatically refresh every 20 seconds
+  useEffect(() => {
+    fetchLiveArrivals(currentStopCode);
+    const interval = setInterval(() => {
+      fetchLiveArrivals(currentStopCode);
+    }, 20000);
+    return () => clearInterval(interval);
+  }, [currentStopCode, fetchLiveArrivals]);
 
   // Live countdown timer: decrement seconds realistically
   useEffect(() => {
@@ -85,33 +200,9 @@ export default function App() {
   // Refresh handler
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      // Refresh with subtle variation in arrival times
-      setStopsData((prev) =>
-        prev.map((stop) => ({
-          ...stop,
-          services: stop.services.map((srv) => {
-            // slight jitter to simulate live telemetry
-            const jitter = Math.floor(Math.random() * 30) - 10;
-            return {
-              ...srv,
-              nextBus: {
-                ...srv.nextBus,
-                seconds: Math.max(10, srv.nextBus.seconds + jitter),
-              },
-              nextBus2: {
-                ...srv.nextBus2,
-                seconds: Math.max(180, srv.nextBus2.seconds + jitter),
-              },
-            };
-          }),
-        }))
-      );
-      setLastUpdated(getFormattedTime());
-      setIsRefreshing(false);
-      showToast('Arrival times refreshed');
-    }, 600);
-  }, [getFormattedTime]);
+    fetchLiveArrivals(currentStopCode);
+    showToast('Refreshing live arrivals...');
+  }, [currentStopCode, fetchLiveArrivals]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -247,9 +338,81 @@ export default function App() {
             </button>
           </div>
 
+          {/* Four Specific UI State Messages (loading, empty, refused, unreachable) */}
+          {fetchStatus === 'loading' && (
+            <div
+              id="status-loading-banner"
+              className="bg-sky-50 border border-sky-200 text-sky-900 rounded-2xl p-4 mb-3.5 flex items-center gap-3 text-xs sm:text-sm shadow-2xs"
+            >
+              <div className="w-2.5 h-2.5 rounded-full bg-sky-600 animate-ping shrink-0" />
+              <span className="font-semibold">
+                Fetching live bus arrival timings from Singapore Land Transport Authority...
+              </span>
+            </div>
+          )}
+
+          {fetchStatus === 'refused' && (
+            <div
+              id="status-refused-banner"
+              className="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl p-4 mb-3.5 shadow-2xs"
+            >
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-xs sm:text-sm">
+                    The upstream transport service refused the request; please verify your API credentials.
+                  </p>
+                  <p className="text-[11px] text-amber-700 mt-1">
+                    Configure <code className="bg-amber-100 px-1 py-0.5 rounded font-mono font-bold">LTA_ACCOUNT_KEY</code> in your deployment environment.
+                  </p>
+                </div>
+                <button
+                  onClick={() => fetchLiveArrivals(currentStopCode)}
+                  className="text-xs bg-amber-200 hover:bg-amber-300 text-amber-900 font-bold px-2.5 py-1 rounded-lg cursor-pointer shrink-0"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
+
+          {fetchStatus === 'unreachable' && (
+            <div
+              id="status-unreachable-banner"
+              className="bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl p-4 mb-3.5 shadow-2xs"
+            >
+              <div className="flex items-start gap-3">
+                <WifiOff className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-xs sm:text-sm">
+                    The upstream transport service is unreachable; please check your network connection.
+                  </p>
+                </div>
+                <button
+                  onClick={() => fetchLiveArrivals(currentStopCode)}
+                  className="text-xs bg-rose-200 hover:bg-rose-300 text-rose-900 font-bold px-2.5 py-1 rounded-lg cursor-pointer shrink-0"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
+
+          {fetchStatus === 'empty' && (
+            <div
+              id="status-empty-card"
+              className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-600 mb-3.5 shadow-2xs"
+            >
+              <Clock className="w-8 h-8 mx-auto text-slate-400 mb-2" />
+              <p className="font-semibold text-sm">
+                No buses are currently running for this stop.
+              </p>
+            </div>
+          )}
+
           {/* Bus Arrival Cards */}
           <div className="space-y-1">
-            {displayedServices.length === 0 ? (
+            {displayedServices.length === 0 && fetchStatus !== 'empty' ? (
               <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-400">
                 <Info className="w-8 h-8 mx-auto text-slate-300 mb-2" />
                 <p className="font-semibold text-sm">No services match current filter</p>
@@ -281,6 +444,40 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      {/* Required Attribution Footer for Singapore Open Data Licence */}
+      <footer id="licence-attribution-footer" className="w-full max-w-md mt-4 mb-2 text-center text-[11px] text-slate-500 leading-relaxed px-4">
+        <p>
+          Contains information from{' '}
+          <a
+            href="https://datamall.lta.gov.sg"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-800 font-medium"
+          >
+            LTA DataMall Bus Arrival
+          </a>
+          , accessed 25 September 2026, made available under the terms of the{' '}
+          <a
+            href="https://data.gov.sg/open-data-licence"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-800 font-medium"
+          >
+            Singapore Open Data Licence version 1.0
+          </a>
+          ,{' '}
+          <a
+            href="https://data.gov.sg/open-data-licence"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-800 font-medium"
+          >
+            data.gov.sg/open-data-licence
+          </a>
+          .
+        </p>
+      </footer>
 
       {/* Stop Selector Modal */}
       <StopSelectorModal
@@ -319,3 +516,4 @@ export default function App() {
     </div>
   );
 }
+

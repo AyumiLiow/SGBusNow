@@ -5,7 +5,7 @@ export interface BusArrivalTiming {
   seconds: number; // Seconds until arrival
   load: BusLoad;
   type: BusType;
-  wheelchair: boolean;
+  wheelchair?: boolean;
 }
 
 export interface BusService {
@@ -13,7 +13,7 @@ export interface BusService {
   operator: 'SBST' | 'SMRT' | 'TTS' | 'GAS';
   destination: string;
   nextBus: BusArrivalTiming;
-  nextBus2: BusArrivalTiming;
+  nextBus2?: BusArrivalTiming;
   nextBus3?: BusArrivalTiming;
   firstBusTime?: string;
   lastBusTime?: string;

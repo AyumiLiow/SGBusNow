@@ -11,10 +11,10 @@ interface BusCardProps {
 export const BusCard: React.FC<BusCardProps> = ({ service, onSelect }) => {
   const getMinutes = (seconds: number) => Math.max(0, Math.round(seconds / 60));
 
-  const nextMins = getMinutes(service.nextBus.seconds);
-  const next2Mins = getMinutes(service.nextBus2.seconds);
+  const nextMins = service.nextBus ? getMinutes(service.nextBus.seconds) : null;
+  const next2Mins = service.nextBus2 ? getMinutes(service.nextBus2.seconds) : null;
 
-  const isNextArriving = service.nextBus.seconds <= 45 || nextMins === 0;
+  const isNextArriving = service.nextBus && (service.nextBus.seconds <= 45 || nextMins === 0);
 
   const renderOccupancy = (load: BusLoad) => {
     switch (load) {
@@ -60,7 +60,7 @@ export const BusCard: React.FC<BusCardProps> = ({ service, onSelect }) => {
               {service.serviceNo}
             </span>
           </div>
-          {renderOccupancy(service.nextBus.load)}
+          {renderOccupancy(service.nextBus?.load || 'SEA')}
         </div>
 
         {/* Center: Arrival Timings (NEXT & 2ND BUS) */}
@@ -75,10 +75,14 @@ export const BusCard: React.FC<BusCardProps> = ({ service, onSelect }) => {
                 <span className="w-2 h-2 rounded-full bg-white animate-ping opacity-80" />
                 <span>Arriving</span>
               </div>
-            ) : (
+            ) : nextMins !== null ? (
               <div className="bg-[#f0f4f8] text-slate-800 px-3 py-1.5 rounded-xl font-medium text-sm flex items-baseline gap-1 border border-slate-100 whitespace-nowrap">
                 <span className="font-extrabold text-base text-slate-900">{nextMins}</span>
                 <span className="text-xs text-slate-500 font-medium">mins</span>
+              </div>
+            ) : (
+              <div className="bg-[#f0f4f8] text-slate-400 px-3 py-1.5 rounded-xl font-medium text-sm border border-slate-100 whitespace-nowrap">
+                -
               </div>
             )}
           </div>
@@ -94,15 +98,21 @@ export const BusCard: React.FC<BusCardProps> = ({ service, onSelect }) => {
               2ND BUS
             </span>
             <div className="bg-[#f0f4f8] text-slate-800 px-3 py-1.5 rounded-xl font-medium text-sm flex items-baseline gap-1 border border-slate-100 whitespace-nowrap">
-              <span className="font-extrabold text-base text-slate-900">{next2Mins}</span>
-              <span className="text-xs text-slate-500 font-medium">mins</span>
+              {next2Mins !== null ? (
+                <>
+                  <span className="font-extrabold text-base text-slate-900">{next2Mins}</span>
+                  <span className="text-xs text-slate-500 font-medium">mins</span>
+                </>
+              ) : (
+                <span className="text-xs text-slate-400 font-medium">-</span>
+              )}
             </div>
           </div>
         </div>
 
         {/* Right: Bus Type (DD / SD) */}
         <div className="flex items-center shrink-0">
-          <BusTypeBadge type={service.nextBus.type} wheelchair={service.nextBus.wheelchair} />
+          <BusTypeBadge type={service.nextBus?.type || 'SD'} wheelchair={service.nextBus?.wheelchair} />
         </div>
       </div>
     </div>
