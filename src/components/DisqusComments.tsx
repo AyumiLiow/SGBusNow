@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 
 // Configuration: Disqus shortname and live canonical URL
-const DEFAULT_SHORTNAME = 'sgbusnow.disqus.com';
+const DEFAULT_SHORTNAME = 'https://sgbusnow.disqus.com/';
 const DEFAULT_PAGE_URL = 'https://sgbusnow.vercel.app/';
 const DEFAULT_PAGE_IDENTIFIER = 'home';
 
@@ -31,10 +31,10 @@ export const DisqusComments: React.FC<DisqusCommentsProps> = ({
     // Ensure clean HTTPS URL without query string
     const cleanUrl = url.split('?')[0];
 
-    // Normalize shortname in case user passes "sgbusnow.disqus.com" or "sgbusnow"
+    // Normalize shortname in case user passes "https://sgbusnow.disqus.com/", "sgbusnow.disqus.com" or "sgbusnow"
     const normalizedShortname = shortname
       .replace(/^https?:\/\//i, '')
-      .replace(/\.disqus\.com\/?$/i, '')
+      .replace(/\.disqus\.com.*$/i, '')
       .replace(/\/+$/, '')
       .trim();
 
