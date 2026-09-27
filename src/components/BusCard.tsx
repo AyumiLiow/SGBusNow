@@ -1,6 +1,5 @@
 import React from 'react';
 import { BusService, BusLoad } from '../types';
-import { BusTypeBadge } from './BusTypeBadge';
 import { Check, AlertCircle, ChevronRight } from 'lucide-react';
 
 interface BusCardProps {
@@ -29,8 +28,8 @@ export const BusCard: React.FC<BusCardProps> = ({ service, onSelect }) => {
         );
       case 'SDA':
         return (
-          <div className="flex items-center gap-1 text-[11px] font-semibold text-[#0d785a] whitespace-nowrap">
-            <div className="w-3.5 h-3.5 rounded-full bg-[#0d785a] text-white flex items-center justify-center">
+          <div className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 whitespace-nowrap">
+            <div className="w-3.5 h-3.5 rounded-full bg-amber-500 text-white flex items-center justify-center">
               <Check className="w-2.5 h-2.5 stroke-[3]" />
             </div>
             <span>Standing Available</span>
@@ -38,8 +37,8 @@ export const BusCard: React.FC<BusCardProps> = ({ service, onSelect }) => {
         );
       case 'LSD':
         return (
-          <div className="flex items-center gap-1 text-[11px] font-semibold text-amber-600 whitespace-nowrap">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-500 fill-amber-100" />
+          <div className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 whitespace-nowrap">
+            <AlertCircle className="w-3.5 h-3.5 text-rose-500 fill-rose-100" />
             <span>Limited Standing</span>
           </div>
         );
@@ -108,11 +107,6 @@ export const BusCard: React.FC<BusCardProps> = ({ service, onSelect }) => {
               )}
             </div>
           </div>
-        </div>
-
-        {/* Right: Bus Type (DD / SD) */}
-        <div className="flex items-center shrink-0">
-          <BusTypeBadge type={service.nextBus?.type || 'SD'} wheelchair={service.nextBus?.wheelchair} />
         </div>
       </div>
     </div>

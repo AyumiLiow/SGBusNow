@@ -1,0 +1,186 @@
+diff --git a/src/App.tsx b/src/App.tsx
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -180,16 +180,33 @@ export default function App() {
+           ...stop,
+           services: stop.services.map((srv) => {
+-            const nextSec = Math.max(0, srv.nextBus.seconds - 1);
+-            const next2Sec = Math.max(0, srv.nextBus2.seconds - 1);
++            const nextSec = srv.nextBus ? Math.max(0, srv.nextBus.seconds - 1) : null;
++            const next2Sec = srv.nextBus2 ? Math.max(0, srv.nextBus2.seconds - 1) : null;
++            const next3Sec = srv.nextBus3 ? Math.max(0, srv.nextBus3.seconds - 1) : null;
+             return {
+               ...srv,
+-              nextBus: {
+-                ...srv.nextBus,
+-                seconds: nextSec,
+-              },
+-              nextBus2: {
+-                ...srv.nextBus2,
+-                seconds: next2Sec,
+-              },
++              ...(srv.nextBus && nextSec !== null
++                ? {
++                    nextBus: {
++                      ...srv.nextBus,
++                      seconds: nextSec,
++                    },
++                  }
++                : {}),
++              ...(srv.nextBus2 && next2Sec !== null
++                ? {
++                    nextBus2: {
++                      ...srv.nextBus2,
++                      seconds: next2Sec,
++                    },
++                  }
++                : {}),
++              ...(srv.nextBus3 && next3Sec !== null
++                ? {
++                    nextBus3: {
++                      ...srv.nextBus3,
++                      seconds: next3Sec,
++                    },
++                  }
++                : {}),
+             };
+           }),
+         }))
+@@ -233,4 +250,4 @@ export default function App() {
+       // Filter tabs
+       if (activeFilterTab === 'DD') {
+-        return srv.nextBus.type === 'DD';
++        return srv.nextBus?.type === 'DD';
+       }
+       if (activeFilterTab === 'SEATS') {
+-        return srv.nextBus.load === 'SEA';
++        return srv.nextBus?.load === 'SEA';
+       }
+diff --git a/src/components/BusCard.tsx b/src/components/BusCard.tsx
+--- a/src/components/BusCard.tsx
++++ b/src/components/BusCard.tsx
+diff --git a/src/components/DisqusComments.tsx b/src/components/DisqusComments.tsx
+--- a/src/components/DisqusComments.tsx
++++ b/src/components/DisqusComments.tsx
+@@ -78,4 +78,0 @@ export const DisqusComments: React.FC<DisqusCommentsProps> = ({
+       script.async = true;
+-      script.crossOrigin = 'anonymous';
+-      script.onerror = () => {
+-        // Prevent uncaught error when network blocks or fails Disqus embed
+-      };
+       (document.head || document.body).appendChild(script);
+diff --git a/src/components/ServiceDetailModal.tsx b/src/components/ServiceDetailModal.tsx
+--- a/src/components/ServiceDetailModal.tsx
++++ b/src/components/ServiceDetailModal.tsx
+@@ -115,39 +115,71 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
+               {/* Bus 1 */}
+-              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50">
+-                <div className="flex items-center gap-3">
+-                  <div className="w-7 h-7 rounded-lg bg-[#0d785a] text-white flex items-center justify-center font-bold text-xs">
+-                    1st
+-                  </div>
+-                  <div>
+-                    <div className="font-bold text-slate-800 text-sm">
+-                      {service.nextBus.seconds <= 45 ? (
+-                        <span className="text-[#0d785a] font-extrabold animate-pulse">
+-                          Arriving at stop now
+-                        </span>
+-                      ) : (
+-                        `In ${getMins(service.nextBus.seconds)} minutes`
+-                      )}
+-                    </div>
+-                    <div className="mt-0.5">{getLoadBadge(service.nextBus.load)}</div>
+-                  </div>
+-                </div>
+-                <div className="text-right">
+-                  <BusTypeBadge type={service.nextBus.type} wheelchair={service.nextBus.wheelchair} />
+-                </div>
+-              </div>
++              {service.nextBus ? (
++                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50">
++                  <div className="flex items-center gap-3">
++                    <div className="w-7 h-7 rounded-lg bg-[#0d785a] text-white flex items-center justify-center font-bold text-xs">
++                      1st
++                    </div>
++                    <div>
++                      <div className="font-bold text-slate-800 text-sm">
++                        {service.nextBus.seconds <= 45 ? (
++                          <span className="text-[#0d785a] font-extrabold animate-pulse">
++                            Arriving at stop now
++                          </span>
++                        ) : (
++                          `In ${getMins(service.nextBus.seconds)} minutes`
++                        )}
++                      </div>
++                      <div className="mt-0.5">{getLoadBadge(service.nextBus.load)}</div>
++                    </div>
++                  </div>
++                  <div className="text-right">
++                    <BusTypeBadge type={service.nextBus.type} wheelchair={service.nextBus.wheelchair} />
++                  </div>
++                </div>
++              ) : (
++                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50">
++                  <div className="flex items-center gap-3">
++                    <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-xs">
++                      1st
++                    </div>
++                    <div>
++                      <div className="font-medium text-slate-500 text-sm">
++                        No bus currently scheduled
++                      </div>
++                    </div>
++                  </div>
++                  <div className="text-right text-xs text-slate-400 font-medium">-</div>
++                </div>
++              )}
+
+               {/* Bus 2 */}
+-              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50">
+-                <div className="flex items-center gap-3">
+-                  <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs">
+-                    2nd
+-                  </div>
+-                  <div>
+-                    <div className="font-bold text-slate-800 text-sm">
+-                      In {getMins(service.nextBus2.seconds)} minutes
+-                    </div>
+-                    <div className="mt-0.5">{getLoadBadge(service.nextBus2.load)}</div>
+-                  </div>
+-                </div>
+-                <div className="text-right">
+-                  <BusTypeBadge type={service.nextBus2.type} wheelchair={service.nextBus2.wheelchair} />
+-                </div>
+-              </div>
++              {service.nextBus2 ? (
++                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50">
++                  <div className="flex items-center gap-3">
++                    <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs">
++                      2nd
++                    </div>
++                    <div>
++                      <div className="font-bold text-slate-800 text-sm">
++                        In {getMins(service.nextBus2.seconds)} minutes
++                      </div>
++                      <div className="mt-0.5">{getLoadBadge(service.nextBus2.load)}</div>
++                    </div>
++                  </div>
++                  <div className="text-right">
++                    <BusTypeBadge type={service.nextBus2.type} wheelchair={service.nextBus2.wheelchair} />
++                  </div>
++                </div>
++              ) : (
++                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50">
++                  <div className="flex items-center gap-3">
++                    <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-xs">
++                      2nd
++                    </div>
++                    <div>
++                      <div className="font-medium text-slate-500 text-sm">
++                        No subsequent bus scheduled
++                      </div>
++                    </div>
++                  </div>
++                  <div className="text-right text-xs text-slate-400 font-medium">-</div>
++                </div>
++              )}

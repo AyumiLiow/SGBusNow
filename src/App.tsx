@@ -32,7 +32,7 @@ export default function App() {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'mobile' | 'full'>('mobile');
   const [searchFilter, setSearchFilter] = useState<string>('');
-  const [activeFilterTab, setActiveFilterTab] = useState<'ALL' | 'DD' | 'SEATS' | 'FAV'>('ALL');
+  const [activeFilterTab, setActiveFilterTab] = useState<'ALL' | 'SEATS' | 'FAV'>('ALL');
   const [favoriteCodes, setFavoriteCodes] = useState<string[]>(['04121', '08057']);
   const [favoriteServices, setFavoriteServices] = useState<string[]>(['7', '106']);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -177,18 +177,35 @@ export default function App() {
         prevStops.map((stop) => ({
           ...stop,
           services: stop.services.map((srv) => {
-            const nextSec = Math.max(0, srv.nextBus.seconds - 1);
-            const next2Sec = Math.max(0, srv.nextBus2.seconds - 1);
+            const nextSec = srv.nextBus ? Math.max(0, srv.nextBus.seconds - 1) : null;
+            const next2Sec = srv.nextBus2 ? Math.max(0, srv.nextBus2.seconds - 1) : null;
+            const next3Sec = srv.nextBus3 ? Math.max(0, srv.nextBus3.seconds - 1) : null;
             return {
               ...srv,
-              nextBus: {
-                ...srv.nextBus,
-                seconds: nextSec,
-              },
-              nextBus2: {
-                ...srv.nextBus2,
-                seconds: next2Sec,
-              },
+              ...(srv.nextBus && nextSec !== null
+                ? {
+                    nextBus: {
+                      ...srv.nextBus,
+                      seconds: nextSec,
+                    },
+                  }
+                : {}),
+              ...(srv.nextBus2 && next2Sec !== null
+                ? {
+                    nextBus2: {
+                      ...srv.nextBus2,
+                      seconds: next2Sec,
+                    },
+                  }
+                : {}),
+              ...(srv.nextBus3 && next3Sec !== null
+                ? {
+                    nextBus3: {
+                      ...srv.nextBus3,
+                      seconds: next3Sec,
+                    },
+                  }
+                : {}),
             };
           }),
         }))
@@ -205,12 +222,71 @@ export default function App() {
     showToast('Refreshing live arrivals...');
   }, [currentStopCode, fetchLiveArrivals]);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
     }, 2500);
-  };
+  }, []);
+
+  // Switch to a new stop code and load metadata if needed (replicated from catchmybusnew.vercel.app)
+  const handleSelectStopCode = useCallback(async (code: string, stopInfo?: { description: string; roadName: string }) => {
+    if (!/^\d{5}$/.test(code)) {
+      showToast('Bus stop code must be 5 digits');
+      return;
+    }
+
+    setCurrentStopCode(code);
+    try {
+      localStorage.setItem('sgbusnow.lastStopCode', code);
+    } catch (_) {}
+
+    if (stopInfo) {
+      setStopsData((prev) => {
+        const existing = prev.find((s) => s.code === code);
+        if (existing) {
+          return prev.map((s) => (s.code === code ? { ...s, name: stopInfo.description, road: stopInfo.roadName } : s));
+        }
+        return [
+          ...prev,
+          {
+            code,
+            name: stopInfo.description,
+            road: stopInfo.roadName,
+            services: [],
+          },
+        ];
+      });
+      showToast(`Switched to ${stopInfo.description}`);
+    } else {
+      try {
+        const res = await fetch(`/api/stop?BusStopCode=${encodeURIComponent(code)}`);
+        if (res.ok) {
+          const meta = await res.json();
+          if (meta?.description) {
+            setStopsData((prev) => {
+              const existing = prev.find((s) => s.code === code);
+              if (existing) {
+                return prev.map((s) => (s.code === code ? { ...s, name: meta.description, road: meta.roadName || s.road } : s));
+              }
+              return [
+                ...prev,
+                {
+                  code,
+                  name: meta.description,
+                  road: meta.roadName || 'Singapore',
+                  services: [],
+                },
+              ];
+            });
+            showToast(`Switched to ${meta.description}`);
+            return;
+          }
+        }
+      } catch (_) {}
+      showToast(`Loading Stop ${code}...`);
+    }
+  }, [showToast]);
 
   const handleToggleFavoriteStop = (code: string) => {
     setFavoriteCodes((prev) =>
@@ -230,11 +306,8 @@ export default function App() {
       }
 
       // Filter tabs
-      if (activeFilterTab === 'DD') {
-        return srv.nextBus.type === 'DD';
-      }
       if (activeFilterTab === 'SEATS') {
-        return srv.nextBus.load === 'SEA';
+        return srv.nextBus?.load === 'SEA';
       }
       if (activeFilterTab === 'FAV') {
         return favoriteServices.includes(srv.serviceNo);
@@ -303,6 +376,7 @@ export default function App() {
             lastUpdated={lastUpdated}
             onOpenSelector={() => setIsSelectorOpen(true)}
             serviceCount={currentStop.services.length}
+            onSelectStopCode={handleSelectStopCode}
           />
 
           {/* Quick Filter Row */}
@@ -311,8 +385,8 @@ export default function App() {
               onClick={() => setActiveFilterTab('ALL')}
               className={`px-3 py-1 rounded-lg font-bold transition-colors cursor-pointer whitespace-nowrap ${
                 activeFilterTab === 'ALL'
-                  ? 'bg-slate-800 text-white shadow-2xs'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                  ? 'bg-[#0d785a] text-white shadow-2xs'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
               All ({currentStop.services.length})
@@ -322,20 +396,10 @@ export default function App() {
               className={`px-3 py-1 rounded-lg font-bold transition-colors cursor-pointer whitespace-nowrap ${
                 activeFilterTab === 'SEATS'
                   ? 'bg-[#0d785a] text-white shadow-2xs'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
               Seats Available
-            </button>
-            <button
-              onClick={() => setActiveFilterTab('DD')}
-              className={`px-3 py-1 rounded-lg font-bold transition-colors cursor-pointer whitespace-nowrap ${
-                activeFilterTab === 'DD'
-                  ? 'bg-slate-800 text-white shadow-2xs'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-              }`}
-            >
-              Double Decker (DD)
             </button>
           </div>
 
@@ -441,7 +505,6 @@ export default function App() {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               Tap any bus for route details & 3rd bus
             </span>
-            <span>DD: Double Decker · SD: Single</span>
           </div>
         </div>
       </main>

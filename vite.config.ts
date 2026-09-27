@@ -23,6 +23,18 @@ function apiDevMiddleware(): Plugin {
           }
         }
 
+        if (pathname === '/api/stop') {
+          try {
+            const { default: stopHandler } = await import('./api/stop.js');
+            return await stopHandler(req, res);
+          } catch (e: any) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: e.message }));
+            return;
+          }
+        }
+
         if (
           pathname === '/api/bus' ||
           pathname === '/api/bus-arrival' ||

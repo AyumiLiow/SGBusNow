@@ -39,13 +39,13 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
         );
       case 'SDA':
         return (
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-[#0d785a] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
             <Check className="w-3 h-3 stroke-[3]" /> Standing Available
           </span>
         );
       case 'LSD':
         return (
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
             <AlertCircle className="w-3 h-3" /> Limited Standing
           </span>
         );
@@ -112,46 +112,78 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
 
             <div className="space-y-2">
               {/* Bus 1 */}
-              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-[#0d785a] text-white flex items-center justify-center font-bold text-xs">
-                    1st
-                  </div>
-                  <div>
-                    <div className="font-bold text-slate-800 text-sm">
-                      {service.nextBus.seconds <= 45 ? (
-                        <span className="text-[#0d785a] font-extrabold animate-pulse">
-                          Arriving at stop now
-                        </span>
-                      ) : (
-                        `In ${getMins(service.nextBus.seconds)} minutes`
-                      )}
+              {service.nextBus ? (
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-[#0d785a] text-white flex items-center justify-center font-bold text-xs">
+                      1st
                     </div>
-                    <div className="mt-0.5">{getLoadBadge(service.nextBus.load)}</div>
+                    <div>
+                      <div className="font-bold text-slate-800 text-sm">
+                        {service.nextBus.seconds <= 45 ? (
+                          <span className="text-[#0d785a] font-extrabold animate-pulse">
+                            Arriving at stop now
+                          </span>
+                        ) : (
+                          `In ${getMins(service.nextBus.seconds)} minutes`
+                        )}
+                      </div>
+                      <div className="mt-0.5">{getLoadBadge(service.nextBus.load)}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <BusTypeBadge type={service.nextBus.type} wheelchair={service.nextBus.wheelchair} />
                   </div>
                 </div>
-                <div className="text-right">
-                  <BusTypeBadge type={service.nextBus.type} wheelchair={service.nextBus.wheelchair} />
+              ) : (
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-xs">
+                      1st
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-500 text-sm">
+                        No bus currently scheduled
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right text-xs text-slate-400 font-medium">-</div>
                 </div>
-              </div>
+              )}
 
               {/* Bus 2 */}
-              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs">
-                    2nd
-                  </div>
-                  <div>
-                    <div className="font-bold text-slate-800 text-sm">
-                      In {getMins(service.nextBus2.seconds)} minutes
+              {service.nextBus2 ? (
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs">
+                      2nd
                     </div>
-                    <div className="mt-0.5">{getLoadBadge(service.nextBus2.load)}</div>
+                    <div>
+                      <div className="font-bold text-slate-800 text-sm">
+                        In {getMins(service.nextBus2.seconds)} minutes
+                      </div>
+                      <div className="mt-0.5">{getLoadBadge(service.nextBus2.load)}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <BusTypeBadge type={service.nextBus2.type} wheelchair={service.nextBus2.wheelchair} />
                   </div>
                 </div>
-                <div className="text-right">
-                  <BusTypeBadge type={service.nextBus2.type} wheelchair={service.nextBus2.wheelchair} />
+              ) : (
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-xs">
+                      2nd
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-500 text-sm">
+                        No subsequent bus scheduled
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right text-xs text-slate-400 font-medium">-</div>
                 </div>
-              </div>
+              )}
 
               {/* Bus 3 */}
               {service.nextBus3 && (

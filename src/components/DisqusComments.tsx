@@ -76,10 +76,6 @@ export const DisqusComments: React.FC<DisqusCommentsProps> = ({
       script.src = `https://${normalizedShortname}.disqus.com/embed.js`;
       script.setAttribute('data-timestamp', Date.now().toString());
       script.async = true;
-      script.crossOrigin = 'anonymous';
-      script.onerror = () => {
-        // Prevent uncaught error when network blocks or fails Disqus embed
-      };
       (document.head || document.body).appendChild(script);
     }
   }, [shortname, url, identifier]);
