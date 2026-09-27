@@ -23,10 +23,9 @@ Copy the block below once for each finding. One finding per problem.
 - Where: https://sgbusnow.vercel.app/ ; first screen
 - What I did, what I saw: i am a frequent visitor of the site. I have to retype the same stop on every visit. 
 - Which heuristic: 7, flexibility and efficiency of use
-- Screen or system: [SCREEN OR SYSTEM, AND WHY: COULD THE SCREEN FIX THIS ON ITS OWN
-  WITH WHAT IT ALREADY HAS?] system. there is a 
-- Severity, and why: [0 TO 4, AND THE FACTOR THAT DROVE IT]
-- The repair: [WHAT SHOULD BE TRUE AFTERWARDS]
+- Screen or system: system. system could be improved by adding a "my favourites" function, where users can save bus stops that they frequent. 
+- Severity, and why: 3, depending of frequency of use. this is important for usability and user retention because it will make it more. 
+- The repair: add another screen for "my favourites", for users to save their favourite bus stop. 
 
 ## 3. My predictions
 1. The three findings I expect my groupmates to raise, and the severity I expect
