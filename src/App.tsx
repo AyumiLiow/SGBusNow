@@ -18,7 +18,9 @@ import {
   AlertTriangle,
   WifiOff,
   Clock,
-  RefreshCw
+  RefreshCw,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 export type FetchStatus = 'loading' | 'empty' | 'refused' | 'unreachable' | 'success';
@@ -36,6 +38,7 @@ export default function App() {
   const [favoriteCodes, setFavoriteCodes] = useState<string[]>(['04121', '08057']);
   const [favoriteServices, setFavoriteServices] = useState<string[]>(['7', '106']);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSeeMoreOpen, setIsSeeMoreOpen] = useState<boolean>(false);
 
   // Live fetch status state
   const [fetchStatus, setFetchStatus] = useState<FetchStatus>('loading');
@@ -237,6 +240,7 @@ export default function App() {
     }
 
     setCurrentStopCode(code);
+    setIsSeeMoreOpen(false);
     try {
       localStorage.setItem('sgbusnow.lastStopCode', code);
     } catch (_) {}
@@ -294,27 +298,42 @@ export default function App() {
     );
   };
 
-  // Filtered bus services
+  // Filtered bus services (sorted with soonest arriving buses first)
   const displayedServices = useMemo(() => {
-    return currentStop.services.filter((srv) => {
-      // Search text filter
-      if (searchFilter.trim()) {
-        const query = searchFilter.toLowerCase().trim();
-        const matchesNo = srv.serviceNo.toLowerCase().includes(query);
-        const matchesDest = srv.destination.toLowerCase().includes(query);
-        if (!matchesNo && !matchesDest) return false;
-      }
+    return currentStop.services
+      .filter((srv) => {
+        // Search text filter
+        if (searchFilter.trim()) {
+          const query = searchFilter.toLowerCase().trim();
+          const matchesNo = srv.serviceNo.toLowerCase().includes(query);
+          const matchesDest = srv.destination.toLowerCase().includes(query);
+          if (!matchesNo && !matchesDest) return false;
+        }
 
-      // Filter tabs
-      if (activeFilterTab === 'SEATS') {
-        return srv.nextBus?.load === 'SEA';
-      }
-      if (activeFilterTab === 'FAV') {
-        return favoriteServices.includes(srv.serviceNo);
-      }
-      return true;
-    });
+        // Filter tabs
+        if (activeFilterTab === 'SEATS') {
+          return srv.nextBus?.load === 'SEA';
+        }
+        if (activeFilterTab === 'FAV') {
+          return favoriteServices.includes(srv.serviceNo);
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const aSec = a.nextBus?.seconds ?? Number.MAX_SAFE_INTEGER;
+        const bSec = b.nextBus?.seconds ?? Number.MAX_SAFE_INTEGER;
+        if (aSec !== bSec) return aSec - bSec;
+        return a.serviceNo.localeCompare(b.serviceNo, undefined, { numeric: true });
+      });
   }, [currentStop, searchFilter, activeFilterTab, favoriteServices]);
+
+  // Max 5 buses arriving soonest, with dropdown expansion for the other buses
+  const visibleServices = useMemo(() => {
+    if (isSeeMoreOpen || displayedServices.length <= 5) {
+      return displayedServices;
+    }
+    return displayedServices.slice(0, 5);
+  }, [displayedServices, isSeeMoreOpen]);
 
   return (
     <div className="min-h-screen bg-[#eef2f6] flex flex-col items-center justify-start py-4 sm:py-8 px-2 sm:px-4 text-slate-800">
@@ -489,13 +508,37 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              displayedServices.map((service) => (
-                <BusCard
-                  key={service.serviceNo}
-                  service={service}
-                  onSelect={(srv) => setSelectedService(srv)}
-                />
-              ))
+              <>
+                {visibleServices.map((service) => (
+                  <BusCard
+                    key={service.serviceNo}
+                    service={service}
+                    onSelect={(srv) => setSelectedService(srv)}
+                  />
+                ))}
+
+                {displayedServices.length > 5 && (
+                  <div className="pt-1.5 pb-1">
+                    <button
+                      id="see-more-buses-btn"
+                      onClick={() => setIsSeeMoreOpen((prev) => !prev)}
+                      className="w-full py-2.5 px-4 bg-white hover:bg-emerald-50/50 active:bg-emerald-50 text-[#0d785a] hover:text-[#0b664d] font-bold text-xs sm:text-sm rounded-xl border border-slate-200/90 shadow-2xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                      aria-expanded={isSeeMoreOpen}
+                    >
+                      <span>
+                        {isSeeMoreOpen
+                          ? 'See less'
+                          : `See more (${displayedServices.length - 5} other buses)`}
+                      </span>
+                      {isSeeMoreOpen ? (
+                        <ChevronUp className="w-4 h-4 stroke-[2.5]" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 stroke-[2.5]" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
