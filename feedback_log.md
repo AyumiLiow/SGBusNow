@@ -1,0 +1,14 @@
+# feedback_log.md
+Ayumi, Group 5
+
+| Groupmate (initials) | Their live address | Link to my comment | Posted on | Findings |
+|---|---|---|---|---|
+| [INITIALS] | [ADDRESS] | [LINK TO THE COMMENT] | [DAY AND TIME] | [HOW MANY] |
+| [INITIALS] | [ADDRESS] | [LINK TO THE COMMENT] | [DAY AND TIME] | [HOW MANY] |
+| [INITIALS] | [ADDRESS] | [LINK TO THE COMMENT] | [DAY AND TIME] | [HOW MANY] |
+| [INITIALS] | [ADDRESS] | [LINK TO THE COMMENT] | [DAY AND TIME] | [HOW MANY] |
+| [INITIALS] | [ADDRESS] | [LINK TO THE COMMENT] | [DAY AND TIME] | [HOW MANY] |
+
+
+[ADD ONE ROW FOR EACH OTHER MEMBER OF YOUR GROUP. FOR A MEMBER YOU COULD NOT
+EVALUATE, WRITE WHY AND WHEN YOU LAST LOOKED IN PLACE OF THE LINK.]
