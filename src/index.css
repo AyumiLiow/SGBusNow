@@ -202,4 +202,7 @@ body {
   padding: 8px;
   font-size: 13px;
 }
+# disqus_thread a {
+  color: #0d785a;
+}
 
