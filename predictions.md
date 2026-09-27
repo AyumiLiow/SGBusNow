@@ -26,6 +26,14 @@ Copy the block below once for each finding. One finding per problem.
 - Screen or system: system. system could be improved by adding a "my favourites" function, where users can save bus stops that they frequent. 
 - Severity, and why: 3, depending of frequency of use. this is important for usability and user retention because it will make it more. 
 - The repair: add another screen for "my favourites", for users to save their favourite bus stop.
+  
+### Finding 3
+- Where: https://sgbusnow.vercel.app/ ; screen after "See more" drop down function is selected. 
+- What I did, what I saw: I pressed the "See more (X other buses)", the other buses at the bus stop. on phone safari, it might be overwhelming to see more than 10 buses. 
+- Which heuristic: 8, aesthetic and minimalist design.
+- Screen or system: system. system could be re-configured to show all buses of a specific bus stop - at a glance - similar to at a real-life bus stop. 
+- Severity, and why: 2, minor visibility problem but it is important for readability for phone users. 
+- The repair: add a feature that shows all buses of a specific stop "At A Glance". 
 
 ## 3. My predictions
 1. The three findings I expect my groupmates to raise, and the severity I expect
