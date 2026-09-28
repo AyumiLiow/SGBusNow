@@ -8,6 +8,3 @@ Ayumi, Group 1
 | TTS | https://mgmt6110.vercel.app/ | http://disq.us/p/36rcnh5 | 28 September 2026, 13:00 | 3 |
 | MM | https://problemset2.vercel.app/ | http://disq.us/p/36rcom4 | 28 September 2026, 13:00 | 3|
 
-
-[ADD ONE ROW FOR EACH OTHER MEMBER OF YOUR GROUP. FOR A MEMBER YOU COULD NOT
-EVALUATE, WRITE WHY AND WHEN YOU LAST LOOKED IN PLACE OF THE LINK.]
