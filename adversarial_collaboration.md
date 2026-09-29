@@ -18,8 +18,7 @@ board at 27 September 2026, 11pm
 
 ## My predictions, checked
 - Expected finding 1: cannot tell with the severity i expected, because there was no comment on it. 
-- Expected finding 2: broke! i expected comments on the usability of the app, in terms of having a feature of "favourite bus stops" due to the app's nature.
--                   i learnt that it is possible to pre-empt this, before sharing the app w users. 
+- Expected finding 2: broke! i expected comments on the usability of the app, in terms of having a feature of "favourite bus stops" due to the app's nature. i learnt that it is possible to pre-empt this, before sharing the app w users. 
 - Expected finding 3: almost broke, pointed out by 1 reviewer because the issue of "long list of buses" was raised in tangent with my expectations.
 - The heuristic I named as my product's worst: 9 — Help Users Recognize, Diagnose, and Recover from Errors
   because this problem is critical to the app's credibility. 
