@@ -42,5 +42,4 @@ Copy the block below once for each finding. One finding per problem.
 3. The finding that would show my own evaluation was wrong: My groupmate may not see this as a major problem, if they are not frequent bus users, or if public buses are not their main mode of transportation. In this case, having a "favourites" feature will be a secondary improvement to have. 
 
 ## 4. Findings I had already heard in the studio
-[ONLY IF I READ FINDINGS ABOUT MY PRODUCT IN OUR WEEK 5 STUDIO: EACH ONE IN A
-LINE, WITH WHO RAISED IT. OTHERWISE WRITE "NONE".]
+none
