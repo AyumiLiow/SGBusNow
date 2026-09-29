@@ -1,6 +1,35 @@
 // Vercel Serverless Function: api/stop.js
 // Handles bus stop search by description/road name and bus stop metadata lookup
 
+// Fallback stops for Singapore Central & Popular Interchanges
+const fallbackStops = [
+  { stopCode: '04121', description: 'Bras Basah Green', roadName: 'Bras Basah Rd' },
+  { stopCode: '08057', description: 'Dhoby Ghaut Stn', roadName: 'Orchard Rd' },
+  { stopCode: '09048', description: 'Orchard Stn / Lucky Plaza', roadName: 'Orchard Rd' },
+  { stopCode: '08041', description: 'YMCA', roadName: 'Orchard Rd' },
+  { stopCode: '08058', description: 'Aft Dhoby Ghaut Stn', roadName: 'Orchard Rd' },
+  { stopCode: '08137', description: 'Orchard Plaza', roadName: 'Orchard Rd' },
+  { stopCode: '08138', description: "Concorde Hotel S'pore", roadName: 'Orchard Rd' },
+  { stopCode: '09011', description: 'Opp Ngee Ann City', roadName: 'Orchard Turn' },
+  { stopCode: '09022', description: 'Orchard Stn Exit 13', roadName: 'Orchard Blvd' },
+  { stopCode: '09023', description: 'Opp Orchard Stn/ION', roadName: 'Orchard Turn' },
+  { stopCode: '09037', description: 'Bef Cairnhill Rd', roadName: 'Orchard Rd' },
+  { stopCode: '09038', description: 'Opp Somerset Stn', roadName: 'Orchard Rd' },
+  { stopCode: '09047', description: 'Orchard Stn/Tang Plaza', roadName: 'Orchard Rd' },
+  { stopCode: '01019', description: 'Bras Basah Cplx', roadName: 'Victoria St' },
+  { stopCode: '01039', description: 'Bugis Cube', roadName: 'Nth Bridge Rd' },
+  { stopCode: '01112', description: 'Bugis Stn Exit A', roadName: 'Victoria St' },
+  { stopCode: '01119', description: 'Aft Bugis Stn Exit C', roadName: 'Victoria St' },
+  { stopCode: '03019', description: 'Opp The Treasury', roadName: 'North Bridge Rd' },
+  { stopCode: '03211', description: 'Opp OCBC Ctr', roadName: 'South Bridge Rd' },
+  { stopCode: '03541', description: 'Marina Bay Sands MICE', roadName: 'Bayfront Ave' },
+  { stopCode: '05013', description: 'Chinatown Stn Exit C', roadName: 'Eu Tong Sen St' },
+  { stopCode: '14141', description: 'VivoCity', roadName: 'Telok Blangah Rd' },
+  { stopCode: '17009', description: 'Clementi Int', roadName: 'Clementi Ave 3' },
+  { stopCode: '28009', description: 'Jurong East Int', roadName: 'Jurong Gateway Rd' },
+  { stopCode: '75009', description: 'Tampines Int', roadName: 'Tampines Ctrl 1' },
+];
+
 export default async function handler(req, res) {
   if (!res.status) {
     res.status = (code) => {
@@ -53,34 +82,6 @@ export default async function handler(req, res) {
 
     // Local fallback matching
     const qLower = trimmed.toLowerCase();
-    const fallbackStops = [
-      { stopCode: '04121', description: 'Bras Basah Green', roadName: 'Bras Basah Rd' },
-      { stopCode: '08057', description: 'Dhoby Ghaut Stn', roadName: 'Orchard Rd' },
-      { stopCode: '09048', description: 'Orchard Stn / Lucky Plaza', roadName: 'Orchard Rd' },
-      { stopCode: '08041', description: 'YMCA', roadName: 'Orchard Rd' },
-      { stopCode: '08058', description: 'Aft Dhoby Ghaut Stn', roadName: 'Orchard Rd' },
-      { stopCode: '08137', description: 'Orchard Plaza', roadName: 'Orchard Rd' },
-      { stopCode: '08138', description: "Concorde Hotel S'pore", roadName: 'Orchard Rd' },
-      { stopCode: '09011', description: 'Opp Ngee Ann City', roadName: 'Orchard Turn' },
-      { stopCode: '09022', description: 'Orchard Stn Exit 13', roadName: 'Orchard Blvd' },
-      { stopCode: '09023', description: 'Opp Orchard Stn/ION', roadName: 'Orchard Turn' },
-      { stopCode: '09037', description: 'Bef Cairnhill Rd', roadName: 'Orchard Rd' },
-      { stopCode: '09038', description: 'Opp Somerset Stn', roadName: 'Orchard Rd' },
-      { stopCode: '09047', description: 'Orchard Stn/Tang Plaza', roadName: 'Orchard Rd' },
-      { stopCode: '01019', description: 'Bras Basah Cplx', roadName: 'Victoria St' },
-      { stopCode: '01039', description: 'Bugis Cube', roadName: 'Nth Bridge Rd' },
-      { stopCode: '01112', description: 'Bugis Stn Exit A', roadName: 'Victoria St' },
-      { stopCode: '01119', description: 'Aft Bugis Stn Exit C', roadName: 'Victoria St' },
-      { stopCode: '03019', description: 'Opp The Treasury', roadName: 'North Bridge Rd' },
-      { stopCode: '03211', description: 'Opp OCBC Ctr', roadName: 'South Bridge Rd' },
-      { stopCode: '03541', description: 'Marina Bay Sands MICE', roadName: 'Bayfront Ave' },
-      { stopCode: '05013', description: 'Chinatown Stn Exit C', roadName: 'Eu Tong Sen St' },
-      { stopCode: '14141', description: 'VivoCity', roadName: 'Telok Blangah Rd' },
-      { stopCode: '17009', description: 'Clementi Int', roadName: 'Clementi Ave 3' },
-      { stopCode: '28009', description: 'Jurong East Int', roadName: 'Jurong Gateway Rd' },
-      { stopCode: '75009', description: 'Tampines Int', roadName: 'Tampines Ctrl 1' },
-    ];
-
     const matched = fallbackStops.filter(
       (s) =>
         s.stopCode.includes(qLower) ||
@@ -95,7 +96,7 @@ export default async function handler(req, res) {
   if (busStopCode) {
     const code = busStopCode.trim();
     if (!/^\d{5}$/.test(code)) {
-      return res.status(400).send('Bus stop code must be 5 digits.');
+      return res.status(400).json({ error: 'Code not found 😔 Please check 5-digit code again.' });
     }
 
     try {
@@ -105,22 +106,31 @@ export default async function handler(req, res) {
       );
       if (upstreamRes.ok) {
         const data = await upstreamRes.json();
-        res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
-        return res.status(200).json(data);
+        if (data && data.description) {
+          res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
+          return res.status(200).json(data);
+        }
+      } else if (upstreamRes.status === 404) {
+        return res.status(404).json({ error: 'Code not found 😔 Please check 5-digit code again.' });
       }
     } catch (err) {
       // Fallback
     }
 
-    return res.status(200).json({
-      stopCode: code,
-      description: `Bus Stop ${code}`,
-      roadName: 'Singapore',
-      latitude: 1.3521,
-      longitude: 103.8198,
-      nearby: []
-    });
+    const matchedStop = fallbackStops.find((s) => s.stopCode === code);
+    if (matchedStop) {
+      return res.status(200).json({
+        stopCode: code,
+        description: matchedStop.description,
+        roadName: matchedStop.roadName,
+        latitude: 1.3521,
+        longitude: 103.8198,
+        nearby: []
+      });
+    }
+
+    return res.status(404).json({ error: 'Code not found 😔 Please check 5-digit code again.' });
   }
 
-  return res.status(400).send('Bus stop code must be 5 digits.');
+  return res.status(400).json({ error: 'Code not found 😔 Please check 5-digit code again.' });
 }

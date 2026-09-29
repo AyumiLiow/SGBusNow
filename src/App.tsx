@@ -233,19 +233,19 @@ export default function App() {
   }, []);
 
   // Switch to a new stop code and load metadata if needed (replicated from catchmybusnew.vercel.app)
-  const handleSelectStopCode = useCallback(async (code: string, stopInfo?: { description: string; roadName: string }) => {
+  const handleSelectStopCode = useCallback(async (code: string, stopInfo?: { description: string; roadName: string }): Promise<boolean> => {
     if (!/^\d{5}$/.test(code)) {
-      showToast('Bus stop code must be 5 digits');
-      return;
+      showToast('Code not found 😔 Please check 5-digit code again.');
+      return false;
     }
 
-    setCurrentStopCode(code);
-    setIsSeeMoreOpen(false);
-    try {
-      localStorage.setItem('sgbusnow.lastStopCode', code);
-    } catch (_) {}
-
     if (stopInfo) {
+      setCurrentStopCode(code);
+      setIsSeeMoreOpen(false);
+      try {
+        localStorage.setItem('sgbusnow.lastStopCode', code);
+      } catch (_) {}
+
       setStopsData((prev) => {
         const existing = prev.find((s) => s.code === code);
         if (existing) {
@@ -262,12 +262,19 @@ export default function App() {
         ];
       });
       showToast(`Switched to ${stopInfo.description}`);
+      return true;
     } else {
       try {
         const res = await fetch(`/api/stop?BusStopCode=${encodeURIComponent(code)}`);
         if (res.ok) {
           const meta = await res.json();
           if (meta?.description) {
+            setCurrentStopCode(code);
+            setIsSeeMoreOpen(false);
+            try {
+              localStorage.setItem('sgbusnow.lastStopCode', code);
+            } catch (_) {}
+
             setStopsData((prev) => {
               const existing = prev.find((s) => s.code === code);
               if (existing) {
@@ -284,11 +291,12 @@ export default function App() {
               ];
             });
             showToast(`Switched to ${meta.description}`);
-            return;
+            return true;
           }
         }
       } catch (_) {}
-      showToast(`Loading Stop ${code}...`);
+      showToast('Code not found 😔 Please check 5-digit code again.');
+      return false;
     }
   }, [showToast]);
 

@@ -8,7 +8,7 @@ interface ActiveStopBannerProps {
   lastUpdated: string;
   onOpenSelector: () => void;
   serviceCount: number;
-  onSelectStopCode: (code: string, stopInfo?: { description: string; roadName: string }) => void;
+  onSelectStopCode: (code: string, stopInfo?: { description: string; roadName: string }) => Promise<boolean | void> | void;
 }
 
 interface ShortlistedStop {
@@ -24,6 +24,7 @@ export const ActiveStopBanner: React.FC<ActiveStopBannerProps> = ({
   onSelectStopCode,
 }) => {
   const [inputCode, setInputCode] = useState<string>(currentStop.code);
+  const [codeError, setCodeError] = useState<string | null>(null);
   const [searchDesc, setSearchDesc] = useState<string>('');
   const [shortlistedStops, setShortlistedStops] = useState<ShortlistedStop[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -32,6 +33,7 @@ export const ActiveStopBanner: React.FC<ActiveStopBannerProps> = ({
   // Sync input when active stop changes
   useEffect(() => {
     setInputCode(currentStop.code);
+    setCodeError(null);
   }, [currentStop.code]);
 
   // Debounced search for bus stop description or road name
@@ -72,17 +74,24 @@ export const ActiveStopBanner: React.FC<ActiveStopBannerProps> = ({
   }, [searchDesc]);
 
   // Form submit for 5-digit bus stop code
-  const handleCodeSubmit = (e: React.FormEvent) => {
+  const handleCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = inputCode.trim();
-    if (code.length > 0) {
-      onSelectStopCode(code);
+    if (!/^\d{5}$/.test(code)) {
+      setCodeError('Code not found 😔 Please check 5-digit code again.');
+      return;
+    }
+    setCodeError(null);
+    const result = await onSelectStopCode(code);
+    if (result === false) {
+      setCodeError('Code not found 😔 Please check 5-digit code again.');
     }
   };
 
   // Clicking a shortlisted stop from description search
   const handleSelectShortlisted = (stop: ShortlistedStop) => {
     setInputCode(stop.stopCode);
+    setCodeError(null);
     onSelectStopCode(stop.stopCode, {
       description: stop.description,
       roadName: stop.roadName,
@@ -104,7 +113,10 @@ export const ActiveStopBanner: React.FC<ActiveStopBannerProps> = ({
               id="bus-stop-code"
               className="stop-code-input"
               value={inputCode}
-              onChange={(e) => setInputCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
+              onChange={(e) => {
+                setInputCode(e.target.value.replace(/\D/g, '').slice(0, 5));
+                if (codeError) setCodeError(null);
+              }}
               placeholder="01039"
               maxLength={5}
               pattern="[0-9]{5}"
@@ -115,6 +127,15 @@ export const ActiveStopBanner: React.FC<ActiveStopBannerProps> = ({
               Show buses
             </button>
           </div>
+          {codeError && (
+            <div
+              id="bus-stop-code-error"
+              className="w-full text-xs font-semibold text-rose-600 mt-2"
+              role="alert"
+            >
+              {codeError}
+            </div>
+          )}
         </form>
 
         {/* Search by bus stop description or road name */}
@@ -171,7 +192,9 @@ export const ActiveStopBanner: React.FC<ActiveStopBannerProps> = ({
             ) : (
               !isSearching && (
                 <div className="shortlisted-empty-hint" id="no-shortlisted-stops-hint">
-                  No matching bus stops found for &ldquo;{searchDesc}&rdquo;.
+                  {/^\d+$/.test(searchDesc.trim())
+                    ? 'Code not found 😔 Please check 5-digit code again.'
+                    : `No matching bus stops found for “${searchDesc}”.`}
                 </div>
               )
             )}
